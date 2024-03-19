@@ -10,8 +10,49 @@
         http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd">
 
     <changeSet  id="initial db"  author="aval">
-        <createTable tableName="test">
-            <column name="test" type="text"/>
+        <createTable tableName="user">
+            <column name="id" type="int" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" unique="true"/>
+            </column>
+            <column name="login" type="text"/>
+            <column name="password" type="text"/>
+        </createTable>
+        <createTable tableName="category">
+            <column name="id" type="int" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" unique="true"/>
+            </column>
+            <column name="category_name" type="varchar(255)"/>
+        </createTable>
+        <createTable tableName="account">
+            <column name="user_id" type="int">
+                <constraints primaryKey="true" foreignKeyName="fk_account_user" references="user(id)" nullable="false" unique="true"/>
+            </column>
+            <column name="balance" type="decimal" defaultValue="0.0"/>
+        </createTable>
+        <createTable tableName="account_operation_type">
+            <column name="id" type="int" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="type_name" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createTable tableName="account_operation">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="account_id" type="int">
+                <constraints nullable="false" foreignKeyName="fk_account_operation_account" references="account(user_id)"/>
+            </column>
+            <column name="operation_type" type="int">
+                <constraints foreignKeyName="fk_account_operation_account_operation_type" references="account_operation_type(id)" nullable="false"/>
+            </column>
+            <column name="operation_category" type="int">
+                <constraints foreignKeyName="fk_account_operation_category" references="category(id)"/>
+            </column>
+            <column name="amount" type="decimal" defaultValue="0.0">
+                <constraints nullable="false"/>
+            </column>
         </createTable>
     </changeSet>
 </databaseChangeLog>
