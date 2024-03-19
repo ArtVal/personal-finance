@@ -20,7 +20,7 @@ case class MigrationServiceImpl(liqui: Liquibase) extends MigrationService {
 }
 
 object MigrationServiceImpl {
-  val layer: ZLayer[Liquibase, Nothing, MigrationServiceImpl] = ZLayer{
+  val layer: ZLayer[Liquibase, Nothing, MigrationServiceImpl] = ZLayer.scoped{
     for {
       liqui <- ZIO.service[Liquibase]
     } yield MigrationServiceImpl(liqui)
@@ -43,7 +43,9 @@ object MigrationService {
         new CompositeResourceAccessor(
           classLoaderAccessor,
           new DirectoryResourceAccessor(Paths.get("")))))(accessor => ZIO.succeed(accessor.close()))
-    jdbcConn <- ZIO.acquireRelease(ZIO.attempt(new JdbcConnection(ds.getConnection())))(conn => ZIO.succeed(conn.close()))
+    jdbcConn <- ZIO.acquireRelease(ZIO.attempt(new JdbcConnection(ds.getConnection()))){conn =>
+      ZIO.succeed(conn.close())
+    }
     liqui <- ZIO.attempt(new Liquibase(config.changeLog, fileOpener, jdbcConn))
   } yield liqui
 }
