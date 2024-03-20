@@ -1,12 +1,13 @@
 package http
 
-import http.Authentication.jwtDecode
-import zio.http.{HttpApp, Method, Response, Routes, handler}
+import http.Authentication.{AuthData, auth}
+import zio.http.{HttpApp, Method, Request, Response, Routes, handler}
 
 object FinanceAccount {
 
   def routes: HttpApp[Any] = Routes(
-    Method.GET / "hello" -> handler(Response.text("hello"))
-  ).toHttpApp@@Authentication.cookieAuth(jwtDecode(_).isDefined)
+    Method.GET / "hello" -> auth -> handler{ (authData: AuthData, _: Request)  =>
+      Response.text(s"hello ${authData.login}")}
+  ).toHttpApp
 
 }

@@ -1,9 +1,10 @@
 package http
 
 import pdi.jwt.{Jwt, JwtAlgorithm, JwtClaim}
-import zio.http.Middleware.customAuth
+import zio.http.Middleware.customAuthProviding
 import zio.http._
 import zio.http.codec.PathCodec.string
+import zio.json._
 
 import java.time.Clock
 
@@ -14,9 +15,15 @@ object Authentication {
 
   implicit val clock: Clock = Clock.systemUTC
 
+  case class AuthData(login: String)
+  object AuthData {
+    implicit val decoder: JsonDecoder[AuthData] =
+      DeriveJsonDecoder.gen[AuthData]
+  }
+
   // Helper to encode the JWT token
   def jwtEncode(username: String): String = {
-    val json  = s"""{"user": "${username}"}"""
+    val json  = s"""{"login": "${username}"}"""
     val claim = JwtClaim {
       json
     }.issuedNow.expiresIn(300)
@@ -43,19 +50,24 @@ object Authentication {
         },
     ).toHttpApp
 
-  def cookieAuth(f: String => Boolean): HandlerAspect[Any, Unit] =
-    customAuth(
-      _.cookie("session_token") match {
-        case Some(cookie) => f(cookie.content)
-        case _                                        => false
-      }
-    )
+  def auth: HandlerAspect[Any, AuthData] = {
+    customAuthProviding[AuthData](authData)
+  }
+
+  def authData(req: Request): Option[AuthData] = {
+    req.cookie("session_token")
+      .map(_.content)
+      .flatMap(jwtDecode)
+      .map(_.content)
+      .map(_.fromJson[AuthData])
+      .flatMap(_.toOption)
+  }
 
   // Http app that is accessible only via a jwt token
   def user: HttpApp[Any] = Routes(
-    Method.GET / "user" / string("name") / "greet" -> handler { (name: String, req: Request) =>
-      Response.text(s"Welcome to the ZIO party! ${name}")
+    Method.GET / "user" / string("name") / "greet" -> auth -> handler { (name: String, auth: AuthData, req: Request) =>
+      Response.text(s"Welcome to the ZIO party! ${name} ${auth.login}")
     },
-  ).toHttpApp @@ cookieAuth(jwtDecode(_).isDefined)
+  ).toHttpApp
 
 }
