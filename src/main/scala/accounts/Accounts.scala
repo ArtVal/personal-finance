@@ -1,11 +1,10 @@
 package accounts
 
 import auth.Authentication.{AuthData, auth}
-import users.{User, UserRepo}
+import users.UserRepo
 import zio.ZIO
 import zio.http.{HttpApp, Method, Request, Response, Routes, handler}
-import zio.http.codec.PathCodec.string
-import zio.json.EncoderOps
+import zio.json.{DecoderOps, EncoderOps}
 
 object Accounts {
   def apply(): HttpApp[AccountRepo with UserRepo] = Routes(
@@ -24,7 +23,12 @@ object Accounts {
       } yield Response.json(balance.toJson)
     },
     Method.POST / "account" -> auth -> handler {  (auth: AuthData, req: Request) =>
-      ???
+      for {
+        body <- req.body.asString.orDie
+        entity <- ZIO.fromEither(body.fromJson[Account])
+        account <- AccountRepo.updateAccount(entity)
+
+      } yield Response.json(account.toJson)
     }
   ).handleError(err => Response.notFound(err.toString)).toHttpApp
 
