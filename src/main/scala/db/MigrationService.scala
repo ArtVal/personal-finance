@@ -1,5 +1,7 @@
 package db
 
+import io.getquill.context.ZioJdbc.DataSourceLayer
+import io.getquill.jdbczio.Quill
 import liquibase.Liquibase
 import liquibase.database.jvm.JdbcConnection
 import liquibase.resource.{ClassLoaderResourceAccessor, CompositeResourceAccessor, DirectoryResourceAccessor}
@@ -40,11 +42,9 @@ case class MigrationServiceImpl(dataSource: DataSource) extends MigrationService
 }
 
 object MigrationServiceImpl {
-  val layer: ZLayer[DataSource, Nothing, MigrationServiceImpl] = ZLayer {
-    for {
-      ds <- ZIO.service[DataSource]
-    } yield MigrationServiceImpl(ds)
-  }
+
+  val layer: ZLayer[DataSource, Nothing, MigrationServiceImpl] =
+    ZLayer.fromFunction(MigrationServiceImpl(_))
 }
 
 object MigrationService {

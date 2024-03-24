@@ -9,6 +9,6 @@ import zio.ZLayer
 import javax.sql.DataSource
 
 object DbDataSource {
-  def hikariDS: HikariDataSource = JdbcContextConfig(LoadConfig("db")).dataSource
-  val zioDS: ZLayer[Any, Throwable, DataSource] = ZLayer.succeed(hikariDS)
+//  def hikariDS: HikariDataSource = JdbcContextConfig(LoadConfig("db")).dataSource
+//  val zioDS: ZLayer[Any, Throwable, DataSource] = ZLayer.succeed(hikariDS)
 }

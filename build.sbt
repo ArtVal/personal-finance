@@ -14,8 +14,10 @@ lazy val root = (project in file("."))
       "dev.zio" %% "zio" % "2.0.21",
       "dev.zio" %% "zio-config" % "4.0.1",
       "dev.zio" %% "zio-config-typesafe" % "4.0.1",
+      "dev.zio" %% "zio-config-magnolia" % "4.0.1",
       "dev.zio" %% "zio-http" % "3.0.0-RC3",
       "dev.zio" %% "zio-crypto" % "0.0.0+249-d7572168-SNAPSHOT",
+
       "io.getquill"  %% "quill-jdbc-zio" % "4.8.3",
       "org.postgresql" % "postgresql" % "42.7.2",
       "org.liquibase" % "liquibase-core" % "4.26.0",

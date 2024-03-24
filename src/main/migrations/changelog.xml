@@ -10,7 +10,9 @@
             <column name="id" type="int" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false" unique="true"/>
             </column>
-            <column name="login" type="text"/>
+            <column name="login" type="text">
+                <constraints unique="true"/>
+            </column>
             <column name="password" type="text"/>
         </createTable>
         <createTable tableName="category">
