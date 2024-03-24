@@ -1,3 +1,4 @@
+import accounts.{AccountRepo, PersistentAccountRepo}
 import auth.Authentication
 import config.HttpServerConfig
 import db.{MigrationService, MigrationServiceImpl}
@@ -8,6 +9,8 @@ import zio.crypto.hash.Hash
 import zio.http.netty.NettyConfig
 import zio.http.{HttpApp, Response, Server}
 import zio.{Config, Console, Ref, Runtime, ZIO, ZIOAppArgs, ZIOAppDefault, ZLayer}
+
+import javax.sql.DataSource
 
 object App extends ZIOAppDefault {
   override val bootstrap: ZLayer[ZIOAppArgs, Any, Any] =
@@ -32,7 +35,7 @@ object App extends ZIOAppDefault {
         }
       )
 //  val quillLayer: ZLayer[DataSource, Nothing, Quill.Postgres[SnakeCase.type]] = Quill.Postgres.fromNamingStrategy(SnakeCase)
-  val routes: HttpApp[Hash with UserRepo] = Authentication()
+  val routes: HttpApp[AccountRepo with UserRepo with DataSource with Hash] = Authentication()
 //  val app: ZIO[MigrationService, Throwable, Nothing] = MigrationService.RunMigrate *> Server.serve(routes).provide(Server.default, Hash.live)
   override def run: ZIO[Any, Throwable, Nothing] = {
     val httpApp = routes
@@ -49,7 +52,8 @@ object App extends ZIOAppDefault {
         Hash.live,
         MigrationServiceImpl.layer,
         Quill.DataSource.fromPrefix("db"),
-        PersistentUserRepo.layer
+        PersistentUserRepo.layer,
+        PersistentAccountRepo.layer
 
 
         // A layer responsible for storing the state of the `counterApp`

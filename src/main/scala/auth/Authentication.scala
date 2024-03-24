@@ -1,5 +1,7 @@
 package auth
 
+import accounts.AccountRepo
+import db.Ctx.transaction
 import pdi.jwt.{Jwt, JwtAlgorithm, JwtClaim}
 import users.UserRepo
 import zio.crypto.hash.{Hash, HashAlgorithm, MessageDigest}
@@ -10,6 +12,7 @@ import zio.json._
 import zio.{Chunk, RIO, ZIO}
 
 import java.time.Clock
+import javax.sql.DataSource
 
 object Authentication {
 
@@ -67,10 +70,10 @@ object Authentication {
       .flatMap(_.toOption)
   }
 
-  def hashPwd(pwd: String): ZIO[Hash, Throwable, String] =  hashPassword(pwd).map(_.value.toArray.map("%02X" format _).mkString)
-
+  def hashPwd(pwd: String): ZIO[Hash, Throwable, String] =
+    hashPassword(pwd).map(digest => binary2hex(digest.value.toArray))
   // Http app that is accessible only via a jwt token
-  def apply(): HttpApp[Hash with UserRepo] = Routes(
+  def apply(): HttpApp[AccountRepo with UserRepo with DataSource with Hash] = Routes(
     Method.POST / "login" ->
       handler { req: Request =>
         for {
@@ -97,8 +100,15 @@ object Authentication {
      for {
         body <- req.body.asString.orDie
         entity <- ZIO.fromEither(body.fromJson[User])
-        hash <- hashPassword(entity.password).map(_.value.toArray.map("%02X" format _).mkString)
-        id <- UserRepo.register(users.User(0, entity.login, hash))
+        hash <- hashPwd(entity.password)
+        id <- transaction{
+          for {
+            id <- UserRepo.register(users.User(0, entity.login, hash))
+            _ <- AccountRepo.register(id)
+          } yield {
+            id
+          }
+        }
       } yield {
         Response.json(users.User(id, entity.login, hash).toJson)
       }
@@ -124,7 +134,8 @@ object Authentication {
   }
 
   def binary2hex(bytes: Array[Byte]): String =  {
-    bytes.map(_.toHexString).mkString
+//    bytes.map(_.toHexString).mkString
+      bytes.map("%02X" format _).mkString
   }
 
 }
