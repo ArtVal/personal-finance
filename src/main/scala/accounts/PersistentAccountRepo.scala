@@ -25,22 +25,21 @@ case class PersistentAccountRepo(ds: DataSource) extends AccountRepo {
     } yield id
   }.provide(ZLayer.succeed(ds))
 
-  override def lookup(userId: Int): Task[Option[Double]] =
+  override def lookup(userId: Int): Task[Option[Account]] =
     ctx
       .run {
         accountSchema
           .filter(p => p.userId == lift(userId))
-          .map(a => a.balance)
       }
       .provide(ZLayer.succeed(ds))
       .map(_.headOption)
 
-  override def updateAccount(userId: Int, balance: Double): Task[Double] = {
+  override def updateAccount(account: Account): Task[Account] = {
     for {
       balance <- ctx.run {
         accountSchema.updateValue {
-          lift(Account(userId, balance))
-        }.returning(_.balance)
+          lift(account)
+        }.returning(a => a)
       }
     } yield balance
   }.provide(ZLayer.succeed(ds))
