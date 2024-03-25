@@ -1,5 +1,6 @@
-package db
+package storages
 
+import config.LiquibaseConfig
 import io.getquill.context.ZioJdbc.DataSourceLayer
 import io.getquill.jdbczio.Quill
 import liquibase.Liquibase

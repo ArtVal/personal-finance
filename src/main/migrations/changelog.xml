@@ -20,20 +20,13 @@
                 <constraints primaryKey="true" nullable="false" unique="true"/>
             </column>
             <column name="category_name" type="varchar(255)"/>
+            <column name="read_only" type="boolean" defaultValue="false"/>
         </createTable>
         <createTable tableName="account">
             <column name="user_id" type="int">
                 <constraints primaryKey="true" foreignKeyName="fk_account_user" references="user(id)" nullable="false" unique="true"/>
             </column>
             <column name="balance" type="decimal" defaultValue="0.0"/>
-        </createTable>
-        <createTable tableName="account_operation_type">
-            <column name="id" type="int" autoIncrement="true">
-                <constraints primaryKey="true"/>
-            </column>
-            <column name="type_name" type="varchar(255)">
-                <constraints nullable="false"/>
-            </column>
         </createTable>
         <createTable tableName="account_operation">
             <column name="id" type="bigint" autoIncrement="true">
@@ -42,9 +35,6 @@
             <column name="account_id" type="int">
                 <constraints nullable="false" foreignKeyName="fk_account_operation_account" references="account(user_id)"/>
             </column>
-            <column name="operation_type" type="int">
-                <constraints foreignKeyName="fk_account_operation_account_operation_type" references="account_operation_type(id)" nullable="false"/>
-            </column>
             <column name="operation_category" type="int">
                 <constraints foreignKeyName="fk_account_operation_category" references="category(id)"/>
             </column>
@@ -52,5 +42,44 @@
                 <constraints nullable="false"/>
             </column>
         </createTable>
+    </changeSet>
+    <changeSet id="category" author="aval">
+        <insert tableName="category">
+            <column name="category_name" value="Поступление"/>
+            <column name="read_only" value="true"/>
+        </insert>
+        <insert tableName="category">
+            <column name="category_name" value="Бытовые"/>
+        </insert>
+        <insert tableName="category">
+            <column name="category_name" value="Обеды"/>
+        </insert>
+        <insert tableName="category">
+            <column name="category_name" value="Развлечения"/>
+        </insert>
+        <insert tableName="category">
+            <column name="category_name" value="Поездки"/>
+        </insert>
+        <insert tableName="category">
+            <column name="category_name" value="Авто"/>
+        </insert>
+        <insert tableName="category">
+            <column name="category_name" value="Подарки"/>
+        </insert>
+        <insert tableName="category">
+            <column name="category_name" value="Покупки"/>
+        </insert>
+        <insert tableName="category">
+            <column name="category_name" value="Спорт"/>
+        </insert>
+        <insert tableName="category">
+            <column name="category_name" value="Здоровье"/>
+        </insert>
+        <insert tableName="category">
+            <column name="category_name" value="Обучение"/>
+        </insert>
+        <insert tableName="category">
+            <column name="category_name" value="Другое"/>
+        </insert>
     </changeSet>
 </databaseChangeLog>

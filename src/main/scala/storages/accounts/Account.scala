@@ -1,6 +1,5 @@
-package accounts
+package storages.accounts
 
-import users.User
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 case class Account(userId: Int, balance: Double)

@@ -1,4 +1,4 @@
-package users
+package storages.users
 
 import zio.{Task, ZIO}
 

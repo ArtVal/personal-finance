@@ -1,15 +1,13 @@
-package users
+package storages.users
 
-import accounts.AccountRepo
-import db.Ctx
-import db.Ctx.querySchema
+import storages.Ctx
 import io.getquill.{EntityQuery, Quoted}
 import zio.{Task, ZLayer}
 
 import javax.sql.DataSource
 
 case class UserTable(id: Int, login: String, password: String)
-case class PersistentUserRepo(ds: DataSource, account: AccountRepo) extends UserRepo {
+case class PersistentUserRepo(ds: DataSource) extends UserRepo {
   val ctx: Ctx.type = Ctx
   import ctx._
   private lazy val userSchema: Quoted[EntityQuery[UserTable]] = quote {
@@ -56,6 +54,6 @@ case class PersistentUserRepo(ds: DataSource, account: AccountRepo) extends User
 }
 
 object PersistentUserRepo {
-  def layer: ZLayer[DataSource with AccountRepo, Nothing, PersistentUserRepo] =
-      ZLayer.fromFunction(PersistentUserRepo(_, _))
+  def layer: ZLayer[DataSource, Nothing, PersistentUserRepo] =
+      ZLayer.fromFunction(PersistentUserRepo(_))
 }

@@ -1,9 +1,10 @@
-import accounts.{AccountRepo, PersistentAccountRepo}
-import auth.Authentication
 import config.HttpServerConfig
-import db.{MigrationService, MigrationServiceImpl}
+import controllers.{Accounts, Authentication}
+import storages.accounts.{AccountRepo, PersistentAccountRepo}
+import storages.users.{PersistentUserRepo, User, UserRepo}
+import storages.{MigrationService, MigrationServiceImpl}
 import io.getquill.jdbczio.Quill
-import users.{PersistentUserRepo, User, UserRepo}
+import services.{UserService, UserServiceImpl}
 import zio.config.typesafe.TypesafeConfigProvider
 import zio.crypto.hash.Hash
 import zio.http.netty.NettyConfig
@@ -35,7 +36,7 @@ object App extends ZIOAppDefault {
         }
       )
 //  val quillLayer: ZLayer[DataSource, Nothing, Quill.Postgres[SnakeCase.type]] = Quill.Postgres.fromNamingStrategy(SnakeCase)
-  val routes: HttpApp[AccountRepo with UserRepo with DataSource with Hash] = Authentication()
+  val routes: HttpApp[AccountRepo with UserRepo with UserService with Hash] = Authentication() ++ Accounts()
 //  val app: ZIO[MigrationService, Throwable, Nothing] = MigrationService.RunMigrate *> Server.serve(routes).provide(Server.default, Hash.live)
   override def run: ZIO[Any, Throwable, Nothing] = {
     val httpApp = routes
@@ -53,17 +54,8 @@ object App extends ZIOAppDefault {
         MigrationServiceImpl.layer,
         Quill.DataSource.fromPrefix("db"),
         PersistentUserRepo.layer,
-        PersistentAccountRepo.layer
-
-
-        // A layer responsible for storing the state of the `counterApp`
-//        ZLayer.fromZIO(Ref.make(0)),
-
-        // To use the persistence layer, provide the `PersistentUserRepo.layer` layer instead
-        //      InmemoryUserRepo.layer
+        PersistentAccountRepo.layer,
+        UserServiceImpl.layer
       )
   }
-//    app
-//    .provide(MigrationServiceImpl.layer, zioDS)
-
 }

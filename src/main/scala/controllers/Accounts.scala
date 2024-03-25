@@ -1,7 +1,9 @@
-package accounts
+package controllers
 
-import auth.Authentication.{AuthData, auth}
-import users.UserRepo
+import Authentication.AuthData
+import common.Common.auth
+import storages.accounts.{Account, AccountRepo}
+import storages.users.UserRepo
 import zio.ZIO
 import zio.http.{HttpApp, Method, Request, Response, Routes, handler}
 import zio.json.{DecoderOps, EncoderOps}

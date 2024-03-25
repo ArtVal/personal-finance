@@ -1,7 +1,6 @@
-package accounts
+package storages.accounts
 
-import db.Ctx
-import db.Ctx.querySchema
+import storages.Ctx
 import io.getquill.{EntityQuery, Quoted}
 import zio.{Task, ZLayer}
 

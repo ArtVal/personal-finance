@@ -1,4 +1,4 @@
-package accounts
+package storages.accounts
 
 import zio.{Task, ZIO}
 
