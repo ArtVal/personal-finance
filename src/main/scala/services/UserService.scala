@@ -20,7 +20,6 @@ trait UserService {
 
 case class UserServiceImpl(ds: DataSource, userRepo: UserRepo, accountRepo: AccountRepo, hash: Hash) extends UserService {
   override def register(user: LoginCredentials): Task[User] = transaction{
-
     for {
       hash <- hashPwd(user.password)
       id <- UserRepo.register(users.User(0, user.login, hash))
@@ -61,9 +60,6 @@ object UserServiceImpl {
 
   def hashPwd(pwd: String): ZIO[Hash, Throwable, String] =
     hashPassword(pwd).map(digest => binary2hex(digest.value.toArray))
-
-
-
 }
 object UserService {
   def register(user: LoginCredentials): ZIO[UserService, Throwable, User] =
