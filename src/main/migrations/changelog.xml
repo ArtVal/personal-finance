@@ -19,7 +19,9 @@
             <column name="id" type="int" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false" unique="true"/>
             </column>
-            <column name="category_name" type="varchar(255)"/>
+            <column name="category_name" type="varchar(255)">
+                <constraints unique="true"/>
+            </column>
             <column name="read_only" type="boolean" defaultValue="false"/>
         </createTable>
         <createTable tableName="account">
@@ -35,12 +37,13 @@
             <column name="account_id" type="int">
                 <constraints nullable="false" foreignKeyName="fk_account_operation_account" references="account(user_id)"/>
             </column>
-            <column name="operation_category" type="int">
+            <column name="category_id" type="int">
                 <constraints foreignKeyName="fk_account_operation_category" references="category(id)"/>
             </column>
             <column name="amount" type="decimal" defaultValue="0.0">
                 <constraints nullable="false"/>
             </column>
+            <column name="created" type="timestamptz" defaultValueComputed="current_timestamp"/>
         </createTable>
     </changeSet>
     <changeSet id="category" author="aval">

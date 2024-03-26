@@ -1,7 +1,7 @@
 package controllers
 
-import Authentication.AuthData
-import common.Common.auth
+
+import common.Common.{AuthData, auth}
 import storages.accounts.{Account, AccountRepo}
 import storages.users.UserRepo
 import zio.ZIO

@@ -13,7 +13,6 @@ case class PersistentAccountRepo(ds: DataSource) extends AccountRepo {
     querySchema[Account]("public.account", _.userId -> "user_id")
   }
 
-
   override def register(userId: Int): Task[Int] = {
     for {
       id <- ctx.run {

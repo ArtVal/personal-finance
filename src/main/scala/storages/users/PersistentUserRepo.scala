@@ -14,7 +14,6 @@ case class PersistentUserRepo(ds: DataSource) extends UserRepo {
     querySchema[UserTable]("public.user")
   }
 
-
   override def register(user: User): Task[Int] = {
     for {
       id <- ctx.run {
