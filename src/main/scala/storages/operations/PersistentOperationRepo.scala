@@ -35,8 +35,17 @@ case class PersistentOperationRepo(ds: DataSource) extends OperationRepo {
     ctx.run{
         operationSchema
           .filter(o => o.id == lift(id))
+          .delete
       }.provide(ZLayer.succeed(ds))
       .map(_ => ())
+
+  override def lookup(operationId: Int): Task[Option[Operation]] = {
+    ctx.run {
+        operationSchema.filter(_.id == lift(operationId))
+      }
+      .provide(ZLayer.succeed(ds))
+      .map(_.headOption)
+  }
 }
 
 object PersistentOperationRepo {

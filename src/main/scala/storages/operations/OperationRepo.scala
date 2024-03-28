@@ -6,12 +6,16 @@ import java.time.Instant
 
 trait OperationRepo {
   def list(userId: Int, from: Instant, to: Instant): Task[Seq[Operation]]
+  def lookup(operationId: Int): Task[Option[Operation]]
   def add(operation: Operation): Task[Operation]
   def delete(id: Int): Task[Unit]
 }
 object OperationRepo {
   def list(userId: Int, from: Instant, to: Instant): ZIO[OperationRepo, Throwable, Seq[Operation]] =
     ZIO.serviceWithZIO[OperationRepo](_.list(userId, from, to))
+
+  def lookup(operationId: Int): ZIO[OperationRepo, Throwable, Option[Operation]] =
+    ZIO.serviceWithZIO[OperationRepo](_.lookup(operationId))
 
   def add(operation: Operation): ZIO[OperationRepo, Throwable, Operation] =
     ZIO.serviceWithZIO[OperationRepo](_.add(operation))
