@@ -29,8 +29,8 @@ case class AccountServiceImpl(ds: DataSource, accountRepo: AccountRepo, operatio
 
   override def deleteOperation(operationId: Int): Task[Unit] = transaction {
     for {
-      operation <- operationRepo.lookup(operationId).flatMap(ZIO.getOrFail).mapError(e => new Exception("operation not found", e))
-      oldBalance <- accountRepo.lookup(operation.id).flatMap(ZIO.getOrFail).mapError(e => new Exception("account not found", e))
+      operation <- operationRepo.lookup(operationId).flatMap(ZIO.getOrFail[Operation](_)).mapError(e => new Exception("operation not found", e))
+      oldBalance <- accountRepo.lookup(operation.id).flatMap(ZIO.getOrFail[Account](_)).mapError(e => new Exception("account not found", e))
       newBalance <- newDeleteBalance(oldBalance.balance, operation)
       _ <- operationRepo.delete(operationId)
       account <- accountRepo.updateAccount(newBalance)
@@ -48,13 +48,13 @@ object AccountServiceImpl {
   def layer: ZLayer[DataSource with AccountRepo with OperationRepo with CategoryRepo, Nothing, AccountServiceImpl] =
     ZLayer.fromFunction(AccountServiceImpl(_,_,_,_))
 
-  private def newAddBalance(oldBalance: Double, operation: Operation): ZIO[Any, Exception, Account] = {
+  private def newAddBalance(oldBalance: Double, operation: Operation): Task[Account] = {
     val balance = if (operation.id == 1) oldBalance + operation.amount else oldBalance - operation.amount
     if (balance < 0) ZIO.fail(new Exception("insufficient funds"))
     else ZIO.succeed(Account(operation.accountId, balance))
   }
 
-  private def newDeleteBalance(oldBalance: Double, operation: Operation): ZIO[Any, Exception, Account] = {
+  private def newDeleteBalance(oldBalance: Double, operation: Operation): Task[Account] = {
     val balance = if (operation.id == 1) oldBalance - operation.amount else oldBalance + operation.amount
     if (balance < 0) ZIO.fail(new Exception("insufficient funds"))
     else ZIO.succeed(Account(operation.accountId, balance))
