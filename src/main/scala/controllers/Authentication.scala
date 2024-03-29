@@ -9,6 +9,7 @@ import zio.http._
 import zio.http.codec.PathCodec.string
 import zio.json._
 
+import java.net.URLDecoder
 import java.time.Clock
 
 object Authentication {
@@ -49,7 +50,7 @@ object Authentication {
       }
     },
     Method.GET / "user" / string("name") / "greet" -> auth -> handler { (name: String, auth: AuthData, req: Request) =>
-      Response.text(s"Welcome to the ZIO party! $name ${auth.login}")
+      Response.text(s"Welcome to the ZIO party! ${URLDecoder.decode(name, "utf-8")} ${auth.login}")
     },
     Method.GET / "hello" -> auth -> handler{ (authData: AuthData, _: Request)  =>
       Response.text(s"hello ${authData.login}")}
