@@ -5,7 +5,7 @@ import storages.users.{PersistentUserRepo, User, UserRepo}
 import storages.{MigrationService, MigrationServiceImpl}
 import io.getquill.jdbczio.Quill
 import services.{AccountService, AccountServiceImpl, UserService, UserServiceImpl}
-import storages.categories.PersistentCategoryRepo
+import storages.categories.{CategoryRepo, PersistentCategoryRepo}
 import storages.operations.{OperationRepo, PersistentOperationRepo}
 import zio.config.typesafe.TypesafeConfigProvider
 import zio.crypto.hash.Hash
@@ -38,8 +38,8 @@ object App extends ZIOAppDefault {
         }
       )
 //  val quillLayer: ZLayer[DataSource, Nothing, Quill.Postgres[SnakeCase.type]] = Quill.Postgres.fromNamingStrategy(SnakeCase)
-  val routes: HttpApp[AccountRepo with UserRepo with OperationRepo with AccountService with UserService with Hash] = Authentication() ++ Accounts()
-//  val app: ZIO[MigrationService, Throwable, Nothing] = MigrationService.RunMigrate *> Server.serve(routes).provide(Server.default, Hash.live)
+  val routes: HttpApp[CategoryRepo with AccountService with UserRepo with OperationRepo with AccountRepo with UserService with Hash] =
+    Authentication() ++ Accounts()
   override def run: ZIO[Any, Throwable, Nothing] = {
     val httpApp = routes
     (MigrationService.RunMigrate *>

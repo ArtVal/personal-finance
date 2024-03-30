@@ -11,8 +11,8 @@ import javax.sql.DataSource
 
 trait AccountService {
   def addOperation(operation: Operation): Task[Account]
-  def deleteOperation(operationId: Int): Task[Unit]
-  def addCategory(category: Category): Task[Unit]
+  def deleteOperation(operationId: Int, userId: Int): Task[Unit]
+  def addCategory(category: Category): Task[Category]
   def deleteCategory(categoryId: Int): Task[Unit]
 }
 
@@ -27,17 +27,17 @@ case class AccountServiceImpl(ds: DataSource, accountRepo: AccountRepo, operatio
     } yield account
   }
 
-  override def deleteOperation(operationId: Int): Task[Unit] = transaction {
+  override def deleteOperation(operationId: Int, userId: Int): Task[Unit] = transaction {
     for {
       operation <- operationRepo.lookup(operationId).flatMap(ZIO.getOrFail[Operation](_)).mapError(e => new Exception("operation not found", e))
       oldBalance <- accountRepo.lookup(operation.id).flatMap(ZIO.getOrFail[Account](_)).mapError(e => new Exception("account not found", e))
       newBalance <- newDeleteBalance(oldBalance.balance, operation)
-      _ <- operationRepo.delete(operationId)
+      _ <- operationRepo.delete(operationId, userId)
       account <- accountRepo.updateAccount(newBalance)
     } yield account
   }
 
-  override def addCategory(category: Category): Task[Unit] = categoryRepo.add(category).map(_ => ())
+  override def addCategory(category: Category): Task[Category] = categoryRepo.add(category)
 
   override def deleteCategory(categoryId: Int): Task[Unit] = transaction{
     categoryRepo.delete(categoryId).mapError(e => new Exception("category used", e))
@@ -66,9 +66,9 @@ object AccountServiceImpl {
 object AccountService {
   def addOperation(operation: Operation): ZIO[AccountService, Throwable, Account] =
     ZIO.serviceWithZIO[AccountService](_.addOperation(operation))
-  def deleteOperation(operationId: Int): ZIO[AccountService, Throwable, Unit] =
-    ZIO.serviceWithZIO[AccountService](_.deleteOperation(operationId))
-  def addCategory(category: Category): ZIO[AccountService, Throwable, Unit] =
+  def deleteOperation(operationId: Int, userId: Int): ZIO[AccountService, Throwable, Unit] =
+    ZIO.serviceWithZIO[AccountService](_.deleteOperation(operationId, userId))
+  def addCategory(category: Category): ZIO[AccountService, Throwable, Category] =
     ZIO.serviceWithZIO[AccountService](_.addCategory(category))
   def deleteCategory(categoryId: Int): ZIO[AccountService, Throwable, Unit] =
     ZIO.serviceWithZIO[AccountService](_.deleteCategory(categoryId: Int))

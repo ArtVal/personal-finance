@@ -31,10 +31,10 @@ case class PersistentOperationRepo(ds: DataSource) extends OperationRepo {
         case (id, created) => operation.copy(id = id, created = created)
       }
 
-  override def delete(id: Int): Task[Unit] =
+  override def delete(operationId: Int, userId: Int): Task[Unit] =
     ctx.run{
         operationSchema
-          .filter(o => o.id == lift(id))
+          .filter(o => o.id == lift(operationId) && o.accountId == userId)
           .delete
       }.provide(ZLayer.succeed(ds))
       .map(_ => ())

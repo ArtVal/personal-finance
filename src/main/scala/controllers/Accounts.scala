@@ -4,10 +4,11 @@ package controllers
 import common.Common.{AuthData, auth}
 import services.{AccountService, UserService}
 import storages.accounts.{Account, AccountRepo}
+import storages.categories.{Category, CategoryRepo}
 import storages.operations.{Operation, OperationRepo}
 import storages.users.{User, UserRepo}
 import zio.ZIO
-import zio.http.codec.PathCodec.string
+import zio.http.codec.PathCodec.{int, string}
 import zio.http.{HttpApp, Method, Request, Response, Routes, handler, long}
 import zio.json.{DecoderOps, DeriveJsonDecoder, DeriveJsonEncoder, EncoderOps, JsonDecoder, JsonEncoder}
 
@@ -15,7 +16,7 @@ import java.net.URLDecoder
 import java.time.Instant
 
 object Accounts {
-  def apply(): HttpApp[AccountRepo with UserRepo with OperationRepo with AccountService] = Routes(
+  def apply(): HttpApp[CategoryRepo with AccountService with UserRepo with OperationRepo with AccountRepo] = Routes(
     Method.GET / "account"  -> auth -> handler { (auth: AuthData, req: Request) =>
       for {
         user <- UserRepo.lookupByLogin(auth.login).flatMap(ZIO.getOrFail[User](_))
@@ -38,9 +39,32 @@ object Accounts {
         user <- UserRepo.lookupByLogin(auth.login).flatMap(ZIO.getOrFail[User](_))
         account <- AccountService.addOperation(Operation(0,user.id, entity.categoryId, entity.amount, Instant.now()))
       } yield Response.json(account.toJson)
+    },
+    Method.DELETE / "account" / "operation" / int("operationId") -> auth -> handler{
+      (operationId: Int, auth: AuthData, req: Request) =>
+        for {
+          user <- UserRepo.lookupByLogin(auth.login).flatMap(ZIO.getOrFail[User](_))
+          _ <- AccountService.deleteOperation(operationId, user.id)
+        } yield Response.ok
+    },
+    Method.GET / "account" / "operation" / "category" -> auth -> handler{(auth: AuthData, req: Request)  =>
+      for {
+        categories <- CategoryRepo.list()
+      } yield Response.json(categories.toJson)
+    },
+    Method.POST / "account" / "operation" / "category" -> auth -> handler{(auth: AuthData, req: Request)  =>
+      for {
+        body <- req.body.asString.orDie
+        entity <- ZIO.fromEither(body.fromJson[Category]).mapError(new Exception(_))
+        category <- AccountService.addCategory(Category(0, entity.categoryName))
+      } yield Response.json(category.toJson)
+    },
+    Method.DELETE / "account" / "operation" / "category" / int("categoryId") -> auth -> handler{(categoryId: Int, auth: AuthData, req: Request) =>
+      for {
+        _ <- AccountService.deleteCategory(categoryId)
+      } yield Response.ok
     }
   ).handleError((err: Throwable) => Response.badRequest(err.toString)).toHttpApp
-
 }
 
 case class UserOperation(categoryId: Int, amount: Double)
