@@ -24,7 +24,7 @@ case class PersistentOperationRepo(ds: DataSource) extends OperationRepo {
   override def add(operation: Operation): Task[Operation] =
     ctx.run{
       operationSchema
-        .insertValue(operation)
+        .insertValue(lift(operation))
         .returningGenerated(o => (o.id, o.created))
     }.provide(ZLayer.succeed(ds))
       .map{
@@ -34,7 +34,7 @@ case class PersistentOperationRepo(ds: DataSource) extends OperationRepo {
   override def delete(operationId: Int, userId: Int): Task[Unit] =
     ctx.run{
         operationSchema
-          .filter(o => o.id == lift(operationId) && o.accountId == userId)
+          .filter(o => o.id == lift(operationId) && o.accountId == lift(userId))
           .delete
       }.provide(ZLayer.succeed(ds))
       .map(_ => ())

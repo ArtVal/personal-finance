@@ -19,7 +19,7 @@ trait AccountService {
 case class AccountServiceImpl(ds: DataSource, accountRepo: AccountRepo, operationRepo: OperationRepo, categoryRepo: CategoryRepo) extends AccountService {
   override def addOperation(operation: Operation): Task[Account] = transaction{
     for {
-      oldBalance <- accountRepo.lookup(operation.id)
+      oldBalance <- accountRepo.lookup(operation.accountId)
         .flatMap(b => ZIO.getOrFail(b).mapError(e => new Exception("account not found", e)))
       newBalance <- newAddBalance(oldBalance.balance, operation)
       _ <- operationRepo.add(operation)
@@ -30,7 +30,7 @@ case class AccountServiceImpl(ds: DataSource, accountRepo: AccountRepo, operatio
   override def deleteOperation(operationId: Int, userId: Int): Task[Unit] = transaction {
     for {
       operation <- operationRepo.lookup(operationId).flatMap(ZIO.getOrFail[Operation](_)).mapError(e => new Exception("operation not found", e))
-      oldBalance <- accountRepo.lookup(operation.id).flatMap(ZIO.getOrFail[Account](_)).mapError(e => new Exception("account not found", e))
+      oldBalance <- accountRepo.lookup(operation.accountId).flatMap(ZIO.getOrFail[Account](_)).mapError(e => new Exception("account not found", e))
       newBalance <- newDeleteBalance(oldBalance.balance, operation)
       _ <- operationRepo.delete(operationId, userId)
       account <- accountRepo.updateAccount(newBalance)
@@ -49,14 +49,14 @@ object AccountServiceImpl {
     ZLayer.fromFunction(AccountServiceImpl(_,_,_,_))
 
   private def newAddBalance(oldBalance: Double, operation: Operation): Task[Account] = {
-    val balance = if (operation.id == 1) oldBalance + operation.amount else oldBalance - operation.amount
-    if (balance < 0) ZIO.fail(new Exception("insufficient funds"))
+    val balance = if (operation.categoryId == 1) oldBalance + operation.amount else oldBalance - operation.amount
+    if (balance < 0.0) ZIO.fail(new Exception("insufficient funds"))
     else ZIO.succeed(Account(operation.accountId, balance))
   }
 
   private def newDeleteBalance(oldBalance: Double, operation: Operation): Task[Account] = {
-    val balance = if (operation.id == 1) oldBalance - operation.amount else oldBalance + operation.amount
-    if (balance < 0) ZIO.fail(new Exception("insufficient funds"))
+    val balance = if (operation.categoryId == 1) oldBalance - operation.amount else oldBalance + operation.amount
+    if (balance < 0.0) ZIO.fail(new Exception("insufficient funds"))
     else ZIO.succeed(Account(operation.accountId, balance))
   }
 }

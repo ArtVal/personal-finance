@@ -2,14 +2,14 @@ package controllers
 
 
 import common.Common.{AuthData, auth}
-import services.{AccountService, UserService}
+import services.AccountService
 import storages.accounts.{Account, AccountRepo}
 import storages.categories.{Category, CategoryRepo}
 import storages.operations.{Operation, OperationRepo}
 import storages.users.{User, UserRepo}
 import zio.ZIO
 import zio.http.codec.PathCodec.{int, string}
-import zio.http.{HttpApp, Method, Request, Response, Routes, handler, long}
+import zio.http.{HttpApp, Method, Request, Response, Routes, handler}
 import zio.json.{DecoderOps, DeriveJsonDecoder, DeriveJsonEncoder, EncoderOps, JsonDecoder, JsonEncoder}
 
 import java.net.URLDecoder
@@ -47,19 +47,19 @@ object Accounts {
           _ <- AccountService.deleteOperation(operationId, user.id)
         } yield Response.ok
     },
-    Method.GET / "account" / "operation" / "category" -> auth -> handler{(auth: AuthData, req: Request)  =>
+    Method.GET / "category" -> auth -> handler{(auth: AuthData, req: Request)  =>
       for {
         categories <- CategoryRepo.list()
       } yield Response.json(categories.toJson)
     },
-    Method.POST / "account" / "operation" / "category" -> auth -> handler{(auth: AuthData, req: Request)  =>
+    Method.POST / "category" -> auth -> handler{(auth: AuthData, req: Request)  =>
       for {
         body <- req.body.asString.orDie
-        entity <- ZIO.fromEither(body.fromJson[Category]).mapError(new Exception(_))
-        category <- AccountService.addCategory(Category(0, entity.categoryName))
+        entity <- ZIO.fromEither(body.fromJson[AddCategory]).mapError(new Exception(_))
+        category <- AccountService.addCategory(Category(0, entity.name))
       } yield Response.json(category.toJson)
     },
-    Method.DELETE / "account" / "operation" / "category" / int("categoryId") -> auth -> handler{(categoryId: Int, auth: AuthData, req: Request) =>
+    Method.DELETE / "category" / int("categoryId") -> auth -> handler{(categoryId: Int, auth: AuthData, req: Request) =>
       for {
         _ <- AccountService.deleteCategory(categoryId)
       } yield Response.ok
@@ -73,4 +73,12 @@ object UserOperation {
     DeriveJsonEncoder.gen[UserOperation]
   implicit val decoder: JsonDecoder[UserOperation] =
     DeriveJsonDecoder.gen[UserOperation]
+}
+
+case class AddCategory(name: String) extends AnyVal
+object AddCategory {
+  implicit val encoder: JsonEncoder[AddCategory] =
+    DeriveJsonEncoder.gen[AddCategory]
+  implicit val decoder: JsonDecoder[AddCategory] =
+    DeriveJsonDecoder.gen[AddCategory]
 }

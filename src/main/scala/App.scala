@@ -37,7 +37,6 @@ object App extends ZIOAppDefault {
           NettyConfig.default.maxThreads(c.nThreads)
         }
       )
-//  val quillLayer: ZLayer[DataSource, Nothing, Quill.Postgres[SnakeCase.type]] = Quill.Postgres.fromNamingStrategy(SnakeCase)
   val routes: HttpApp[CategoryRepo with AccountService with UserRepo with OperationRepo with AccountRepo with UserService with Hash] =
     Authentication() ++ Accounts()
   override def run: ZIO[Any, Throwable, Nothing] = {
